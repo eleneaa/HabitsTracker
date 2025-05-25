@@ -1,0 +1,15 @@
+<h1>Мои привычки</h1>
+<a href="{% url 'habit-create' %}">Добавить привычку</a>
+<ul>
+  {% for habit in object_list %}
+    <li>
+      <strong>{{ habit.title }}</strong>
+      — {{ habit.description }}
+      {% if habit.attachment %}
+        — <a href="{{ habit.attachment }}" target="_blank">Файл</a>
+      {% endif %}
+      <a href="{% url 'habit-edit' habit.pk %}">Редактировать</a>
+      <a href="{% url 'habit-delete' habit.pk %}">Удалить</a>
+    </li>
+  {% endfor %}
+</ul>

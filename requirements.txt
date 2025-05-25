@@ -1,8 +1,0 @@
-Django==4.2
-psycopg2-binary
-python-dotenv
-djangorestframework
-djangorestframework-simplejwt
-boto3
-gunicorn==21.2.0
-django-storages==1.14.0

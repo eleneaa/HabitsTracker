@@ -1,51 +1,58 @@
-from rest_framework import generics, permissions, viewsets
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import Habit
-from .serializers import HabitSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import HabitForm
+from django.urls import reverse_lazy
+from django.views import generic
+from .forms import SignUpForm
 
-from .storage import upload_to_yandex_storage
+class SignUpView(generic.CreateView):
+    form_class = SignUpForm
+    success_url = reverse_lazy('login')
+    template_name = 'registration/signup.html'
 
-User = get_user_model()
 
-class HealthCheckView(APIView):
-    def get(self, request):
-        return Response({"status": "ok"}, status=200)
+class HabitListView(LoginRequiredMixin, ListView):
+    model = Habit
+    template_name = 'habits/habit_list.html'
 
-class HabitViewSet(viewsets.ModelViewSet):
-    def perform_create(self, serializer):
+    def get_queryset(self):
+        return Habit.objects.filter(user=self.request.user)
+
+
+class HabitCreateView(LoginRequiredMixin, CreateView):
+    model = Habit
+    form_class = HabitForm
+    template_name = 'habits/habit_form.html'
+    success_url = reverse_lazy('habit-list')
+
+    def form_valid(self, form):
         file = self.request.FILES.get('attachment')
         if file:
+            from .storage import upload_to_yandex_storage
             url = upload_to_yandex_storage(file, f"habits/{file.name}")
-            serializer.save(user=self.request.user, attachment=url)
+            form.instance.attachment = url
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
-class RegisterView(APIView):
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
 
-        if User.objects.filter(username=username).exists():
-            return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
+class HabitUpdateView(LoginRequiredMixin, UpdateView):
+    model = Habit
+    form_class = HabitForm
+    template_name = 'habits/habit_form.html'
+    success_url = reverse_lazy('habit-list')
 
-        user = User.objects.create_user(username=username, password=password)
-        return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
+    def form_valid(self, form):
+        file = self.request.FILES.get('attachment')
+        if file:
+            from .storage import upload_to_yandex_storage
+            url = upload_to_yandex_storage(file, f"habits/{file.name}")
+            form.instance.attachment = url
+        return super().form_valid(form)
 
-class HabitListCreateView(generics.ListCreateAPIView):
-    serializer_class = HabitSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return Habit.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-class HabitRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = HabitSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Habit.objects.filter(user=self.request.user)
+class HabitDeleteView(LoginRequiredMixin, DeleteView):
+    model = Habit
+    template_name = 'habits/habit_confirm_delete.html'
+    success_url = reverse_lazy('habit-list')
