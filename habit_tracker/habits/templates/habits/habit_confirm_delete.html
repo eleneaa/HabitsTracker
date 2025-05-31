@@ -1,0 +1,7 @@
+<h1>Удалить привычку?</h1>
+<form method="post">
+  {% csrf_token %}
+  <p>Точно удалить "{{ object.title }}"?</p>
+  <button type="submit">Удалить</button>
+  <a href="{% url 'habit-list' %}">Отмена</a>
+</form>

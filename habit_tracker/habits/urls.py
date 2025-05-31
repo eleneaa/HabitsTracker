@@ -1,11 +1,20 @@
-from django.urls import path
-from .views import HabitListCreateView, HabitRetrieveUpdateDestroyView, RegisterView, HealthCheckView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from django.urls import path, include
+from .views import HabitListView, HabitCreateView, HabitUpdateView, HabitDeleteView, SignUpView
+from django.urls import reverse_lazy
+from django.http import HttpResponse
+
+def health_check(request):
+    return HttpResponse("OK")
+
+LOGIN_REDIRECT_URL = reverse_lazy('habit-list')
+LOGOUT_REDIRECT_URL = reverse_lazy('login')
 
 urlpatterns = [
-    path('habits/', HabitListCreateView.as_view(), name='habit-list-create'),
-    path('habits/<int:pk>/', HabitRetrieveUpdateDestroyView.as_view(), name='habit-detail'),
-    path('register/', RegisterView.as_view(), name='register'),
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('health/', HealthCheckView.as_view(), name='health-check'),
+    path('', HabitListView.as_view(), name='habit-list'),
+    path('create/', HabitCreateView.as_view(), name='habit-create'),
+    path('<int:pk>/edit/', HabitUpdateView.as_view(), name='habit-edit'),
+    path('<int:pk>/delete/', HabitDeleteView.as_view(), name='habit-delete'),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/signup/', SignUpView.as_view(), name='signup'),
+    path('health/', health_check),
 ]

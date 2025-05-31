@@ -1,0 +1,18 @@
+#cloud-config
+package_update: true
+packages:
+  - docker.io
+runcmd:
+  - systemctl start docker
+  - docker run -d -p 80:8000 \
+      -e DB_NAME=${db_name} \
+      -e DB_USER=${db_user} \
+      -e DB_PASSWORD=${db_password} \
+      -e DB_HOST=${db_host} \
+      -e DB_PORT=5432 \
+      -e YC_ACCESS_KEY=${yc_access_key} \
+      -e YC_SECRET_KEY=${yc_secret_key} \
+      -e YC_BUCKET_NAME=${yc_bucket_name} \
+      -e SECRET_KEY=${django_secret_key} \
+      -e DEBUG=False \
+      your-docker-image-name:latest
